@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Cliente LND usando API REST
+Cliente LND usando API REST com suporte aprimorado para autenticação
 """
 
 import os
@@ -14,7 +14,7 @@ from urllib.parse import urljoin
 class LNDClient:
     """Cliente para interagir com a API REST do LND"""
     
-    def __init__(self, lnd_host="jvx-minipc01", lnd_port=8080, 
+    def __init__(self, lnd_host="localhost", lnd_port=8080, 
                  cert_path=None, macaroon_path=None, dev_mode=False):
         """
         Inicializa o cliente LND
@@ -50,10 +50,10 @@ class LNDClient:
             if not os.path.exists(self.macaroon_path):
                 raise FileNotFoundError(f"Macaroon não encontrado: {self.macaroon_path}")
             
-            # Ler macaroon
+            # Ler macaroon e converter para formato hexadecimal (o que a API REST espera)
             with open(self.macaroon_path, 'rb') as f:
                 macaroon_bytes = f.read()
-            self.macaroon = base64.b64encode(macaroon_bytes).decode('ascii')
+            self.macaroon = macaroon_bytes.hex()
             
             # Configurar sessão
             self.session = requests.Session()

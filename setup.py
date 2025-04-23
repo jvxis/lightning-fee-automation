@@ -22,7 +22,7 @@ def check_python_version():
 def check_pip():
     """Verifica se o pip está instalado"""
     try:
-        subprocess.run([sys.executable, "-m", "pip", "--version"], 
+        subprocess.run([sys.executable, "-m", "pip3", "--version"], 
                       check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print("✓ Pip está instalado")
         return True
@@ -34,7 +34,7 @@ def install_dependencies():
     """Instala as dependências necessárias"""
     print("\nInstalando dependências...")
     try:
-        subprocess.run([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"], 
+        subprocess.run([sys.executable, "-m", "pip3", "install", "-r", "requirements.txt"], 
                       check=True)
         print("✓ Dependências instaladas com sucesso")
         return True
@@ -54,7 +54,7 @@ def create_default_config():
         "lnd_host": "localhost",
         "lnd_port": 8080,
         "lnd_cert_path": "~/.lnd/tls.cert",
-        "lnd_macaroon_path": "~/.lnd/admin.macaroon",
+        "lnd_macaroon_path": "~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
         "fee_strategy": "balanced",
         "update_interval_seconds": 3600,
         "min_base_fee_msat": 1000,
