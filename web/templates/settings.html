@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LND Fee Automation - Configurações</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="text-center mb-4">
+                        <h5>LND Fee Automation</h5>
+                        <p class="text-muted">Gerenciador de Taxas</p>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('dashboard') }}">
+                                <i class="bi bi-speedometer2 me-2"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('channels') }}">
+                                <i class="bi bi-lightning-charge me-2"></i>
+                                Canais
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{ url_for('settings') }}">
+                                <i class="bi bi-gear me-2"></i>
+                                Configurações
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <div class="px-3 mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span>Status da Automação</span>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="automationToggle">
+                            </div>
+                        </div>
+                        <button id="updateFeesBtn" class="btn btn-sm btn-primary w-100">
+                            <i class="bi bi-arrow-repeat me-2"></i>Atualizar Taxas Agora
+                        </button>
+                    </div>
+                    
+                    <div class="px-3 mt-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">Node Status:</small>
+                            <span id="nodeStatus" class="badge bg-success">Online</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="text-muted">Canais Ativos:</small>
+                            <span id="activeChannels">0</span>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Configurações</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button id="saveSettingsBtn" class="btn btn-primary">
+                            <i class="bi bi-save me-2"></i>Salvar Configurações
+                        </button>
+                    </div>
+                </div>
+
+                <!-- General Settings -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Configurações Gerais</h5>
+                                <form id="generalSettingsForm">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="updateInterval" class="form-label">Intervalo de Atualização (segundos)</label>
+                                                <input type="number" class="form-control" id="updateInterval" min="60" value="3600">
+                                                <div class="form-text">Intervalo entre atualizações automáticas de taxas (mínimo 60 segundos)</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="feeStrategy" class="form-label">Estratégia de Taxas</label>
+                                                <select class="form-select" id="feeStrategy">
+                                                    <option value="balanced">Balanceada</option>
+                                                    <option value="competitive">Competitiva</option>
+                                                    <option value="profitable">Lucrativa</option>
+                                                </select>
+                                                <div class="form-text">Estratégia utilizada para calcular as taxas ótimas</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fee Settings -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Configurações de Taxas</h5>
+                                <form id="feeSettingsForm">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="minBaseFee" class="form-label">Taxa Base Mínima (msat)</label>
+                                                <input type="number" class="form-control" id="minBaseFee" min="0" value="1000">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="maxBaseFee" class="form-label">Taxa Base Máxima (msat)</label>
+                                                <input type="number" class="form-control" id="maxBaseFee" min="0" value="5000">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="minFeeRate" class="form-label">Taxa Proporcional Mínima</label>
+                                                <input type="number" class="form-control" id="minFeeRate" min="0" step="0.000001" value="0.000001">
+                                                <div class="form-text">Valor em decimal (ex: 0.000001 = 1 ppm)</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="maxFeeRate" class="form-label">Taxa Proporcional Máxima</label>
+                                                <input type="number" class="form-control" id="maxFeeRate" min="0" step="0.000001" value="0.001">
+                                                <div class="form-text">Valor em decimal (ex: 0.001 = 1000 ppm)</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="timeLockDelta" class="form-label">Time Lock Delta</label>
+                                                <input type="number" class="form-control" id="timeLockDelta" min="0" value="40">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Algorithm Settings -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Configurações do Algoritmo</h5>
+                                <form id="algorithmSettingsForm">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="flowWeight" class="form-label">Peso do Fluxo</label>
+                                                <input type="number" class="form-control" id="flowWeight" min="0" max="1" step="0.1" value="0.7">
+                                                <div class="form-text">Peso do fluxo no cálculo das taxas (0-1)</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="peerWeight" class="form-label">Peso dos Peers</label>
+                                                <input type="number" class="form-control" id="peerWeight" min="0" max="1" step="0.1" value="0.3">
+                                                <div class="form-text">Peso das taxas dos peers no cálculo (0-1)</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="highFlowThreshold" class="form-label">Limite de Fluxo Alto</label>
+                                                <input type="number" class="form-control" id="highFlowThreshold" min="0" max="1" step="0.1" value="0.8">
+                                                <div class="form-text">Percentual de capacidade considerado alto fluxo (0-1)</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="lowFlowThreshold" class="form-label">Limite de Fluxo Baixo</label>
+                                                <input type="number" class="form-control" id="lowFlowThreshold" min="0" max="1" step="0.1" value="0.2">
+                                                <div class="form-text">Percentual de capacidade considerado baixo fluxo (0-1)</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Channel Inclusion/Exclusion -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Inclusão/Exclusão de Canais</h5>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="channelMode" id="allChannelsMode" checked>
+                                        <label class="form-check-label" for="allChannelsMode">
+                                            Automatizar todos os canais (exceto os excluídos)
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="channelMode" id="selectiveChannelsMode">
+                                        <label class="form-check-label" for="selectiveChannelsMode">
+                                            Automatizar apenas canais selecionados
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Canais Incluídos</h6>
+                                        <select class="form-select" id="enabledChannels" multiple size="10">
+                                            <!-- Será preenchido via JavaScript -->
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Canais Excluídos</h6>
+                                        <select class="form-select" id="excludedChannels" multiple size="10">
+                                            <!-- Será preenchido via JavaScript -->
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mt-3">
+                                    <div class="col-md-12">
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-outline-primary btn-sm" id="addToIncluded">
+                                                <i class="bi bi-arrow-left"></i> Incluir
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger btn-sm" id="addToExcluded">
+                                                Excluir <i class="bi bi-arrow-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+</body>
+</html>
