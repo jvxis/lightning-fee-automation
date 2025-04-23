@@ -41,7 +41,7 @@ class LNDClient:
             
             # Carregar macaroon
             if macaroon_path is None:
-                macaroon_path = os.path.expanduser("~/.lnd/admin.macaroon")
+                macaroon_path = os.path.expanduser("~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon")
             self.macaroon_path = os.path.expanduser(macaroon_path)
             
             # Verificar se os arquivos existem
