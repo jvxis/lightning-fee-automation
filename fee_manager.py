@@ -86,7 +86,7 @@ class FeeManager:
             else:
                 # Salvar configuração padrão se o arquivo não existir
                 with open(self.config_path, 'w') as f:
-                    json.dump(default_config, indent=2, sort_keys=True, f)
+                    json.dump(default_config, f, indent=2, sort_keys=True)
                 return default_config
         except Exception as e:
             logger.error(f"Erro ao carregar configuração: {e}")
@@ -96,7 +96,7 @@ class FeeManager:
         """Salva a configuração atual no arquivo"""
         try:
             with open(self.config_path, 'w') as f:
-                json.dump(self.config, indent=2, sort_keys=True, f)
+                json.dump(self.config, f, indent=2, sort_keys=True)
             logger.info("Configuração salva com sucesso")
         except Exception as e:
             logger.error(f"Erro ao salvar configuração: {e}")
@@ -118,10 +118,10 @@ class FeeManager:
         """Salva estatísticas atuais de canais e peers"""
         try:
             with open("channel_stats.json", 'w') as f:
-                json.dump(self.channel_stats, indent=2, f)
+                json.dump(self.channel_stats, f, indent=2)
             
             with open("peer_fees.json", 'w') as f:
-                json.dump(self.peer_fees, indent=2, f)
+                json.dump(self.peer_fees, f, indent=2)
         except Exception as e:
             logger.error(f"Erro ao salvar estatísticas: {e}")
     
