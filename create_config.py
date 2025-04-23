@@ -26,6 +26,6 @@ DEFAULT_CONFIG = {
 
 # Salvar configuração padrão em um arquivo
 with open("fee_config.json", "w") as f:
-    json.dump(DEFAULT_CONFIG, indent=2, sort_keys=True, f)
+    json.dump(DEFAULT_CONFIG, f, indent=2, sort_keys=True)
 
 print("Arquivo de configuração padrão criado: fee_config.json")
