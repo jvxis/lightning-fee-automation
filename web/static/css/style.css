@@ -54,17 +54,38 @@ body {
     font-weight: 600;
     margin-bottom: 1rem;
 }
-/* Estilos para os containers de gráficos */
+/* Estilos fixos para os containers de gráficos */
 .chart-container {
-    height: 300px;
-    position: relative;
-    margin-bottom: 20px;
-    overflow: hidden;
+    height: 300px !important; /* Força altura fixa */
+    width: 100% !important;
+    position: relative !important;
+    margin-bottom: 20px !important;
+    overflow: hidden !important;
+}
+
+canvas.chart {
+    height: 100% !important;
+    width: 100% !important;
+    max-height: 300px !important;
 }
 
 /* Garantir que os gráficos não ultrapassem seus containers */
-canvas.chart {
-    max-height: 100%;
+.dashboard-card {
+    overflow: hidden !important;
+    margin-bottom: 20px !important;
+}
+
+/* Estilo para o indicador de carregamento */
+#loading-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
 
 /* Estilos para tabelas */
