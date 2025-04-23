@@ -16,7 +16,7 @@ import threading
 import statistics
 
 # Importar o cliente LND
-from lnd_client import LNDClient
+from lnd_client_rest import LNDClient
 
 # Configurar logging
 logging.basicConfig(
@@ -608,7 +608,7 @@ class FeeManager:
 
 if __name__ == "__main__":
     # Exemplo de uso
-    from lnd_client import LNDClient
+    from lnd_client_rest import LNDClient
     
     # Definir modo de desenvolvimento para simular respostas
     os.environ["LND_DEV_MODE"] = "1"

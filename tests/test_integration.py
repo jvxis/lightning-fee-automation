@@ -14,7 +14,7 @@ import unittest
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Importar os módulos a serem testados
-from lnd_client import LNDClient
+from lnd_client_rest import LNDClient
 from fee_manager import FeeManager
 from web.app import app
 

@@ -17,7 +17,7 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Importar os módulos do projeto
-from lnd_client import LNDClient
+from lnd_client_rest import LNDClient
 from fee_manager import FeeManager
 
 # Configurar logging

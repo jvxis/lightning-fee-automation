@@ -14,7 +14,7 @@ from unittest.mock import patch, MagicMock
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Importar o módulo a ser testado
-from lnd_client import LNDClient
+from lnd_client_rest import LNDClient
 
 class TestLNDClient(unittest.TestCase):
     """Testes para o cliente LND"""

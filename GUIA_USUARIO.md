@@ -4,12 +4,24 @@ Este guia fornece instruções detalhadas para instalar, configurar e utilizar a
 
 ## Índice
 
-1. [Instalação](#instalação)
-2. [Configuração Inicial](#configuração-inicial)
-3. [Iniciando a Aplicação](#iniciando-a-aplicação)
-4. [Usando a Interface Web](#usando-a-interface-web)
-5. [Configurando Estratégias de Taxas](#configurando-estratégias-de-taxas)
-6. [Monitoramento e Manutenção](#monitoramento-e-manutenção)
+- [Guia de Instalação e Uso - LND Fee Automation](#guia-de-instalação-e-uso---lnd-fee-automation)
+  - [Índice](#índice)
+  - [Instalação](#instalação)
+    - [Requisitos do Sistema](#requisitos-do-sistema)
+    - [Passo a Passo](#passo-a-passo)
+  - [Configuração Inicial](#configuração-inicial)
+  - [Iniciando a Aplicação](#iniciando-a-aplicação)
+  - [Usando a Interface Web](#usando-a-interface-web)
+    - [Dashboard](#dashboard)
+    - [Gerenciamento de Canais](#gerenciamento-de-canais)
+    - [Configurações](#configurações)
+  - [Configurando Estratégias de Taxas](#configurando-estratégias-de-taxas)
+    - [Estratégia Balanceada](#estratégia-balanceada)
+    - [Estratégia Competitiva](#estratégia-competitiva)
+    - [Estratégia Lucrativa](#estratégia-lucrativa)
+  - [Monitoramento e Manutenção](#monitoramento-e-manutenção)
+    - [Monitoramento Regular](#monitoramento-regular)
+    - [Manutenção](#manutenção)
 
 ## Instalação
 

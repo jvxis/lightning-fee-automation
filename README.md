@@ -1,4 +1,8 @@
-# LND Fee Automation - Documentação
+# LND Fee Automation
+> **Nota importante**: Esta versão da aplicação usa exclusivamente a API REST do LND, 
+> eliminando a necessidade de dependências gRPC que podem ser difíceis de compilar em alguns sistemas.
+> A API REST oferece todas as funcionalidades necessárias para a automação de taxas e é muito mais fácil de configurar.
+ - Documentação
 
 ## Visão Geral
 
@@ -18,6 +22,7 @@ O LND Fee Automation é uma aplicação para automatizar as taxas do seu node Li
 ## Requisitos
 
 - Python 3.8 ou superior
+- Acesso à API REST do LND (geralmente na porta 8080)
 - Node LND ativo e acessível
 - Acesso ao arquivo `tls.cert` e `admin.macaroon` do LND
 - Conexão com a internet para a interface web
@@ -27,7 +32,7 @@ O LND Fee Automation é uma aplicação para automatizar as taxas do seu node Li
 ### 1. Clone o repositório
 
 ```bash
-git clone https://github.com/jvxis/lightning-fee-automation.git
+git clone https://github.com/seu-usuario/lightning-fee-automation.git
 cd lightning-fee-automation
 ```
 
