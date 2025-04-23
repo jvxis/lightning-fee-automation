@@ -34,7 +34,7 @@ cd lightning-fee-automation
 ### 2. Instale as dependências
 
 ```bash
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 ### 3. Configure o acesso ao LND
@@ -44,7 +44,7 @@ Copie os arquivos `tls.cert` e `admin.macaroon` do seu node LND para o diretóri
 ### 4. Execute o script de configuração inicial
 
 ```bash
-python create_config.py
+python3 create_config.py
 ```
 
 Este script irá guiá-lo através da configuração inicial da aplicação, incluindo a conexão com o LND e as estratégias de taxas.
@@ -53,7 +53,7 @@ Este script irá guiá-lo através da configuração inicial da aplicação, inc
 
 ```bash
 cd web
-python app.py
+python3 app.py
 ```
 
 A aplicação estará disponível em `http://localhost:5000`.
@@ -261,7 +261,7 @@ lightning-fee-automation/
 
 ```bash
 cd tests
-python run_tests.py
+python3 run_tests.py
 ```
 
 ### Contribuindo
