@@ -54,6 +54,18 @@ body {
     font-weight: 600;
     margin-bottom: 1rem;
 }
+/* Estilos para os containers de gráficos */
+.chart-container {
+    height: 300px;
+    position: relative;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+/* Garantir que os gráficos não ultrapassem seus containers */
+canvas.chart {
+    max-height: 100%;
+}
 
 /* Estilos para tabelas */
 .table {

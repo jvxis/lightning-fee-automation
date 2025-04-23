@@ -295,6 +295,12 @@ function createOrUpdateChart(canvasId, type, data) {
     const ctx = document.getElementById(canvasId).getContext('2d');
     
     if (charts[canvasId]) {
+        // Limpar dados antes de atualizar
+        charts[canvasId].data.labels = [];
+        charts[canvasId].data.datasets.forEach((dataset) => {
+            dataset.data = [];
+        });
+        
         // Atualizar gráfico existente
         charts[canvasId].data = data;
         charts[canvasId].update();
@@ -305,11 +311,22 @@ function createOrUpdateChart(canvasId, type, data) {
             data: data,
             options: {
                 responsive: true,
-                maintainAspectRatio: false
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        // Definir um limite máximo para evitar o esticamento
+                        suggestedMax: 5000 // Ajuste este valor conforme necessário
+                    }
+                },
+                animation: {
+                    duration: 500 // Reduzir a duração da animação para evitar problemas de renderização
+                }
             }
         });
     }
 }
+
 
 /**
  * Carrega o status do gerenciador de taxas
