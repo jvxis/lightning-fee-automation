@@ -24,7 +24,7 @@ Este guia fornece instruções detalhadas para instalar, configurar e utilizar a
 1. **Clone o repositório**
 
 ```bash
-git clone https://github.com/seu-usuario/lightning-fee-automation.git
+git clone https://github.com/jvxis/lightning-fee-automation.git
 cd lightning-fee-automation
 ```
 
@@ -38,7 +38,7 @@ source venv/bin/activate  # No Windows: venv\Scripts\activate
 3. **Instale as dependências**
 
 ```bash
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 4. **Prepare os arquivos de acesso ao LND**
@@ -56,7 +56,7 @@ Copie esses arquivos para um local seguro ou anote o caminho completo para confi
 1. **Execute o script de configuração**
 
 ```bash
-python create_config.py
+python3 create_config.py
 ```
 
 2. **Siga as instruções interativas**
@@ -80,7 +80,7 @@ Após a conclusão, o script criará um arquivo `config.json` no diretório raiz
 
 ```bash
 cd web
-python app.py
+python3 app.py
 ```
 
 2. **Acesse a interface web**
