@@ -14,7 +14,7 @@ from urllib.parse import urljoin
 class LNDClient:
     """Cliente para interagir com a API REST do LND"""
     
-    def __init__(self, lnd_host="localhost", lnd_port=8080, 
+    def __init__(self, lnd_host="jvx-minipc01", lnd_port=8080, 
                  cert_path=None, macaroon_path=None, dev_mode=False):
         """
         Inicializa o cliente LND
