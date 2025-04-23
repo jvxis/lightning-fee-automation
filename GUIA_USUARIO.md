@@ -31,7 +31,7 @@ cd lightning-fee-automation
 2. **Crie um ambiente virtual (recomendado)**
 
 ```bash
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate  # No Windows: venv\Scripts\activate
 ```
 
