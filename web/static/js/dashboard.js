@@ -1,196 +1,247 @@
 /**
- * Dashboard JavaScript - Versão corrigida para problemas de gráficos
- * Esta versão resolve o problema de crescimento vertical contínuo dos gráficos
+ * Dashboard JavaScript
+ * Responsável pela funcionalidade da página de dashboard
  */
 
-// Objeto para armazenar referências aos gráficos
+// Variáveis globais
+let nodeInfo = {};
+let channels = [];
+let feeManagerStatus = {};
 let charts = {};
-
-// Cores para os gráficos
-const chartColors = {
-    blue: 'rgba(54, 162, 235, 0.7)',
-    green: 'rgba(75, 192, 192, 0.7)',
-    orange: 'rgba(255, 159, 64, 0.7)',
-    red: 'rgba(255, 99, 132, 0.7)',
-    purple: 'rgba(153, 102, 255, 0.7)',
-    yellow: 'rgba(255, 205, 86, 0.7)',
-    grey: 'rgba(201, 203, 207, 0.7)'
-};
 
 // Inicialização quando o documento estiver pronto
 document.addEventListener('DOMContentLoaded', function() {
-    // Aplicar estilos fixos aos containers de gráficos
-    applyFixedStyles();
+    // Inicializar componentes
+    initAutomationToggle();
+    initUpdateFeesButton();
     
-    // Carregar dados iniciais
-    loadDashboardData();
+    // Carregar dados
+    loadNodeInfo();
+    loadChannels();
+    loadFeeManagerStatus();
     
-    // Configurar botão de atualização manual
-    const refreshButton = document.getElementById('refresh-button');
-    if (refreshButton) {
-        refreshButton.addEventListener('click', function() {
-            // Limpar e recriar todos os gráficos
-            Object.keys(charts).forEach(id => {
-                if (charts[id]) {
-                    charts[id].destroy();
-                    charts[id] = null;
-                }
-            });
-            charts = {};
-            
-            // Recarregar dados
-            loadDashboardData();
-        });
-    }
+    // Atualizar periodicamente
+    setInterval(loadNodeInfo, 60000); // A cada minuto
+    setInterval(loadChannels, 60000); // A cada minuto
+    setInterval(loadFeeManagerStatus, 30000); // A cada 30 segundos
 });
 
-/**
- * Aplica estilos fixos aos containers de gráficos
- */
-function applyFixedStyles() {
+// Adicione esta função ao seu arquivo dashboard.js existente
+function limitChartHeight() {
+    // Aplicar altura fixa via JavaScript
     document.querySelectorAll('.chart-container').forEach(container => {
-        container.style.height = '300px';
-        container.style.maxHeight = '300px';
-        container.style.position = 'relative';
-        container.style.width = '100%';
-        container.style.overflow = 'hidden';
+      container.style.height = '300px';
+      container.style.maxHeight = '300px';
+      container.style.overflow = 'hidden';
+    });
+  }
+  
+  // Chame esta função após carregar a página e após cada atualização
+  document.addEventListener('DOMContentLoaded', limitChartHeight);
+  
+
+
+/**
+ * Inicializa o toggle de automação
+ */
+function initAutomationToggle() {
+    const automationToggle = document.getElementById('automationToggle');
+    
+    automationToggle.addEventListener('change', function() {
+        const isRunning = this.checked;
+        
+        // Chamar API para iniciar/parar automação
+        const endpoint = isRunning ? '/api/fees/start' : '/api/fees/stop';
+        
+        fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert(isRunning ? 'Automação iniciada com sucesso!' : 'Automação parada com sucesso!', 'success');
+                loadFeeManagerStatus();
+            } else {
+                showAlert(`Erro: ${data.error}`, 'danger');
+                // Reverter o toggle
+                automationToggle.checked = !isRunning;
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showAlert(`Erro ao ${isRunning ? 'iniciar' : 'parar'} automação: ${error}`, 'danger');
+            // Reverter o toggle
+            automationToggle.checked = !isRunning;
+        });
     });
 }
 
 /**
- * Carrega os dados do dashboard da API
+ * Inicializa o botão de atualização de taxas
  */
-function loadDashboardData() {
-    // Mostrar indicador de carregamento
-    const loadingIndicator = document.getElementById('loading-indicator');
-    if (loadingIndicator) {
-        loadingIndicator.style.display = 'block';
-    }
+function initUpdateFeesButton() {
+    const updateFeesBtn = document.getElementById('updateFeesBtn');
     
-    // Carregar informações do node
+    updateFeesBtn.addEventListener('click', function() {
+        // Desabilitar botão durante a atualização
+        updateFeesBtn.disabled = true;
+        updateFeesBtn.innerHTML = '<i class="bi bi-arrow-repeat me-2"></i>Atualizando...';
+        
+        // Chamar API para atualizar taxas
+        fetch('/api/fees/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Taxas atualizadas com sucesso!', 'success');
+                // Recarregar dados
+                loadChannels();
+            } else {
+                showAlert(`Erro: ${data.error}`, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showAlert(`Erro ao atualizar taxas: ${error}`, 'danger');
+        })
+        .finally(() => {
+            // Reabilitar botão
+            updateFeesBtn.disabled = false;
+            updateFeesBtn.innerHTML = '<i class="bi bi-arrow-repeat me-2"></i>Atualizar Taxas Agora';
+        });
+    });
+}
+
+/**
+ * Carrega informações do node
+ */
+function loadNodeInfo() {
     fetch('/api/node/info')
         .then(response => response.json())
         .then(data => {
-            updateNodeInfo(data);
+            if (!data.error) {
+                nodeInfo = data;
+                updateNodeInfoUI();
+            } else {
+                console.error('Erro ao carregar informações do node:', data.error);
+                document.getElementById('nodeStatus').className = 'badge bg-danger';
+                document.getElementById('nodeStatus').textContent = 'Offline';
+            }
         })
         .catch(error => {
-            console.error('Erro ao carregar informações do node:', error);
+            console.error('Erro:', error);
+            document.getElementById('nodeStatus').className = 'badge bg-danger';
+            document.getElementById('nodeStatus').textContent = 'Erro';
         });
+}
+
+/**
+ * Atualiza a UI com as informações do node
+ */
+function updateNodeInfoUI() {
+    // Atualizar status do node
+    document.getElementById('nodeStatus').className = 'badge bg-success';
+    document.getElementById('nodeStatus').textContent = 'Online';
     
-    // Carregar canais
+    // Atualizar alias e pubkey
+    document.getElementById('nodeAlias').textContent = nodeInfo.alias || 'N/A';
+    document.getElementById('nodePubkey').textContent = nodeInfo.identity_pubkey || 'N/A';
+    
+    // Atualizar contagem de canais
+    const activeChannelsCount = nodeInfo.num_active_channels || 0;
+    const pendingChannelsCount = nodeInfo.num_pending_channels || 0;
+    
+    document.getElementById('activeChannels').textContent = activeChannelsCount;
+    document.getElementById('activeChannelsCount').textContent = activeChannelsCount;
+    document.getElementById('pendingChannelsCount').textContent = pendingChannelsCount;
+}
+
+/**
+ * Carrega a lista de canais
+ */
+function loadChannels() {
     fetch('/api/channels')
         .then(response => response.json())
         .then(data => {
-            updateChannelsInfo(data);
-            createChannelCharts(data);
-        })
-        .catch(error => {
-            console.error('Erro ao carregar informações dos canais:', error);
-        })
-        .finally(() => {
-            // Esconder indicador de carregamento
-            if (loadingIndicator) {
-                loadingIndicator.style.display = 'none';
+            if (!data.error) {
+                channels = data.channels || [];
+                updateChannelsUI();
+                updateChannelsTable();
+                updateFeeCharts();
+            } else {
+                console.error('Erro ao carregar canais:', data.error);
             }
-        });
-    
-    // Carregar status da automação
-    fetch('/api/fees/status')
-        .then(response => response.json())
-        .then(data => {
-            updateAutomationStatus(data);
         })
         .catch(error => {
-            console.error('Erro ao carregar status da automação:', error);
+            console.error('Erro:', error);
         });
 }
 
 /**
- * Atualiza as informações do node na interface
+ * Atualiza a UI com os dados dos canais
  */
-function updateNodeInfo(data) {
-    const nodeAlias = document.getElementById('node-alias');
-    const nodePubkey = document.getElementById('node-pubkey');
-    const nodeChannels = document.getElementById('node-channels');
-    const nodePendingChannels = document.getElementById('node-pending-channels');
-    const nodeBlockHeight = document.getElementById('node-block-height');
-    
-    if (nodeAlias) nodeAlias.textContent = data.alias || 'N/A';
-    if (nodePubkey) nodePubkey.textContent = data.identity_pubkey || 'N/A';
-    if (nodeChannels) nodeChannels.textContent = data.num_active_channels || '0';
-    if (nodePendingChannels) nodePendingChannels.textContent = data.num_pending_channels || '0';
-    if (nodeBlockHeight) nodeBlockHeight.textContent = data.block_height || 'N/A';
-}
-
-/**
- * Atualiza as informações dos canais na interface
- */
-function updateChannelsInfo(data) {
-    const channels = data.channels || [];
-    
-    // Calcular estatísticas
-    let totalCapacity = 0;
+function updateChannelsUI() {
+    // Calcular balanço total
     let totalLocalBalance = 0;
     let totalRemoteBalance = 0;
     
     channels.forEach(channel => {
-        totalCapacity += parseInt(channel.capacity) || 0;
-        totalLocalBalance += parseInt(channel.local_balance) || 0;
-        totalRemoteBalance += parseInt(channel.remote_balance) || 0;
+        totalLocalBalance += parseInt(channel.local_balance || 0);
+        totalRemoteBalance += parseInt(channel.remote_balance || 0);
     });
     
-    // Atualizar estatísticas na interface
-    const totalChannelsElement = document.getElementById('total-channels');
-    const totalCapacityElement = document.getElementById('total-capacity');
-    const totalLocalBalanceElement = document.getElementById('total-local-balance');
-    const totalRemoteBalanceElement = document.getElementById('total-remote-balance');
-    
-    if (totalChannelsElement) totalChannelsElement.textContent = channels.length;
-    if (totalCapacityElement) totalCapacityElement.textContent = formatSats(totalCapacity);
-    if (totalLocalBalanceElement) totalLocalBalanceElement.textContent = formatSats(totalLocalBalance);
-    if (totalRemoteBalanceElement) totalRemoteBalanceElement.textContent = formatSats(totalRemoteBalance);
-    
-    // Atualizar tabela de canais
-    updateChannelsTable(channels);
+    // Atualizar UI
+    document.getElementById('localBalance').textContent = formatSats(totalLocalBalance);
+    document.getElementById('remoteBalance').textContent = formatSats(totalRemoteBalance);
 }
 
 /**
  * Atualiza a tabela de canais
  */
-function updateChannelsTable(channels) {
-    const tableBody = document.getElementById('channels-table-body');
-    if (!tableBody) return;
+function updateChannelsTable() {
+    const tableBody = document.getElementById('channelsTableBody');
+    
+    if (channels.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum canal encontrado</td></tr>';
+        return;
+    }
     
     // Limpar tabela
     tableBody.innerHTML = '';
     
-    // Adicionar linhas para cada canal
+    // Adicionar linhas
     channels.forEach(channel => {
+        const capacity = parseInt(channel.capacity || 0);
+        const localBalance = parseInt(channel.local_balance || 0);
+        const remoteBalance = parseInt(channel.remote_balance || 0);
+        const localPercent = capacity > 0 ? (localBalance / capacity * 100).toFixed(1) : 0;
+        const remotePercent = capacity > 0 ? (remoteBalance / capacity * 100).toFixed(1) : 0;
+        
+        // Obter taxas do canal (simulado para demonstração)
+        const baseFee = '1000 msat';
+        const feeRate = '0.000001 (1 ppm)';
+        
         const row = document.createElement('tr');
-        
-        // Calcular porcentagem de balanço local
-        const capacity = parseInt(channel.capacity) || 1;
-        const localBalance = parseInt(channel.local_balance) || 0;
-        const localPercent = Math.round((localBalance / capacity) * 100);
-        
-        // Criar células
         row.innerHTML = `
-            <td>${channel.remote_pubkey.substring(0, 10)}...</td>
-            <td>${formatSats(channel.capacity)}</td>
+            <td>${shortenString(channel.chan_id)}</td>
+            <td>${formatSats(capacity)}</td>
+            <td>${formatSats(localBalance)} (${localPercent}%)</td>
+            <td>${formatSats(remoteBalance)} (${remotePercent}%)</td>
             <td>
                 <div class="progress">
-                    <div class="progress-bar" role="progressbar" 
-                         style="width: ${localPercent}%;" 
-                         aria-valuenow="${localPercent}" 
-                         aria-valuemin="0" 
-                         aria-valuemax="100">
-                        ${localPercent}%
-                    </div>
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: ${localPercent}%" aria-valuenow="${localPercent}" aria-valuemin="0" aria-valuemax="100"></div>
+                    <div class="progress-bar bg-success" role="progressbar" style="width: ${remotePercent}%" aria-valuenow="${remotePercent}" aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
             </td>
-            <td>${formatSats(channel.local_balance)}</td>
-            <td>${formatSats(channel.remote_balance)}</td>
-            <td>${channel.active ? '<span class="badge bg-success">Ativo</span>' : '<span class="badge bg-danger">Inativo</span>'}</td>
+            <td>${baseFee}</td>
+            <td>${feeRate}</td>
         `;
         
         tableBody.appendChild(row);
@@ -198,149 +249,180 @@ function updateChannelsTable(channels) {
 }
 
 /**
- * Atualiza o status da automação na interface
+ * Atualiza os gráficos de taxas
  */
-function updateAutomationStatus(data) {
-    const statusElement = document.getElementById('automation-status');
-    const lastUpdateElement = document.getElementById('last-update');
-    const nextUpdateElement = document.getElementById('next-update');
-    
-    if (statusElement) {
-        statusElement.textContent = data.running ? 'Ativo' : 'Inativo';
-        statusElement.className = data.running ? 'text-success' : 'text-danger';
-    }
-    
-    if (lastUpdateElement && data.last_update) {
-        lastUpdateElement.textContent = formatDateTime(data.last_update);
-    }
-    
-    if (nextUpdateElement && data.next_update) {
-        nextUpdateElement.textContent = formatDateTime(data.next_update);
-    }
-}
-
-/**
- * Cria os gráficos de canais
- */
-function createChannelCharts(data) {
-    const channels = data.channels || [];
-    
-    // Dados para o gráfico de balanço
-    const balanceData = {
-        labels: ['Balanço Local', 'Balanço Remoto'],
-        datasets: [{
-            data: [
-                channels.reduce((sum, channel) => sum + (parseInt(channel.local_balance) || 0), 0),
-                channels.reduce((sum, channel) => sum + (parseInt(channel.remote_balance) || 0), 0)
-            ],
-            backgroundColor: [chartColors.blue, chartColors.orange],
-            borderWidth: 1
-        }]
-    };
-    
-    // Criar gráfico de balanço
-    createFixedChart('balance-chart', 'doughnut', balanceData);
-    
-    // Dados para o gráfico de distribuição de canais
-    // Agrupar canais por capacidade
-    const capacityGroups = {
-        'Pequeno (<1M)': 0,
-        'Médio (1M-5M)': 0,
-        'Grande (>5M)': 0
-    };
-    
-    channels.forEach(channel => {
-        const capacity = parseInt(channel.capacity) || 0;
-        if (capacity < 1000000) {
-            capacityGroups['Pequeno (<1M)']++;
-        } else if (capacity < 5000000) {
-            capacityGroups['Médio (1M-5M)']++;
-        } else {
-            capacityGroups['Grande (>5M)']++;
-        }
-    });
-    
-    const distributionData = {
-        labels: Object.keys(capacityGroups),
-        datasets: [{
-            label: 'Número de Canais',
-            data: Object.values(capacityGroups),
-            backgroundColor: [chartColors.green, chartColors.blue, chartColors.purple],
-            borderWidth: 1
-        }]
-    };
-    
-    // Criar gráfico de distribuição
-    createFixedChart('distribution-chart', 'bar', distributionData);
-    
-    // Simular dados históricos para o gráfico de taxas
-    // Em uma aplicação real, estes dados viriam da API
-    const feeHistoryData = {
+function updateFeeCharts() {
+    // Criar dados para os gráficos (simulados para demonstração)
+    const avgFeesData = {
         labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
-        datasets: [{
-            label: 'Taxa Base Média (msat)',
-            data: [1000, 1200, 1100, 1300, 1500, 1400],
-            borderColor: chartColors.blue,
-            backgroundColor: 'transparent',
-            borderWidth: 2,
-            tension: 0.4
-        }, {
-            label: 'Taxa Proporcional Média (ppm)',
-            data: [200, 250, 300, 280, 320, 350],
-            borderColor: chartColors.green,
-            backgroundColor: 'transparent',
-            borderWidth: 2,
-            tension: 0.4
-        }]
+        datasets: [
+            {
+                label: 'Taxa Base Média (msat)',
+                data: [1000, 1200, 1100, 1300, 1250, 1400],
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                tension: 0.4
+            },
+            {
+                label: 'Taxa Proporcional Média (ppm)',
+                data: [1, 2, 3, 2, 4, 5],
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                tension: 0.4
+            }
+        ]
     };
     
-    // Criar gráfico de histórico de taxas
-    createFixedChart('fee-history-chart', 'line', feeHistoryData);
+    const feeDistributionData = {
+        labels: ['0-500', '501-1000', '1001-2000', '2001-5000', '5001+'],
+        datasets: [
+            {
+                label: 'Número de Canais',
+                data: [2, 5, 3, 1, 0],
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(153, 102, 255, 0.6)'
+                ],
+                borderColor: [
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(153, 102, 255, 1)'
+                ],
+                borderWidth: 1
+            }
+        ]
+    };
+    
+    // Criar ou atualizar gráficos
+    createOrUpdateChart('avgFeesChart', 'line', avgFeesData);
+    createOrUpdateChart('feeDistributionChart', 'bar', feeDistributionData);
 }
 
 /**
- * Cria um gráfico com configurações fixas para evitar o crescimento vertical
+ * Cria ou atualiza um gráfico
  */
-function createFixedChart(canvasId, type, data) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
+function createOrUpdateChart(canvasId, type, data) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
     
-    // Se já existe um gráfico para este canvas, destruí-lo
     if (charts[canvasId]) {
-        charts[canvasId].destroy();
-        charts[canvasId] = null;
-    }
-    
-    // Configurações específicas para cada tipo de gráfico
-    const options = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'top',
+        // Limpar dados antes de atualizar
+        charts[canvasId].data.labels = [];
+        charts[canvasId].data.datasets.forEach((dataset) => {
+            dataset.data = [];
+        });
+        
+        // Atualizar gráfico existente
+        charts[canvasId].data = data;
+        charts[canvasId].update();
+    } else {
+        // Criar novo gráfico
+        charts[canvasId] = new Chart(ctx, {
+            type: type,
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        // Definir um limite máximo para evitar o esticamento
+                        suggestedMax: 5000 // Ajuste este valor conforme necessário
+                    }
+                },
+                animation: {
+                    duration: 500 // Reduzir a duração da animação para evitar problemas de renderização
+                }
             }
+        });
+    }
+}
+
+
+/**
+ * Carrega o status do gerenciador de taxas
+ */
+function loadFeeManagerStatus() {
+    fetch('/api/fees/status')
+        .then(response => response.json())
+        .then(data => {
+            if (!data.error) {
+                feeManagerStatus = data;
+                updateFeeManagerStatusUI();
+            } else {
+                console.error('Erro ao carregar status do gerenciador de taxas:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+        });
+}
+
+/**
+ * Atualiza a UI com o status do gerenciador de taxas
+ */
+function updateFeeManagerStatusUI() {
+    // Atualizar toggle de automação
+    document.getElementById('automationToggle').checked = feeManagerStatus.running;
+    
+    // Atualizar estratégia
+    document.getElementById('feeStrategy').textContent = formatStrategy(feeManagerStatus.strategy);
+    
+    // Atualizar tabela de atualizações recentes (simulado para demonstração)
+    updateRecentFeeUpdatesTable();
+}
+
+/**
+ * Atualiza a tabela de atualizações recentes de taxas
+ */
+function updateRecentFeeUpdatesTable() {
+    const tableBody = document.getElementById('feeUpdatesTableBody');
+    
+    // Dados simulados para demonstração
+    const updates = [
+        {
+            timestamp: new Date(Date.now() - 3600000).toLocaleString(),
+            channel: '724725106597969921',
+            oldBaseFee: '1000',
+            newBaseFee: '1200',
+            oldFeeRate: '0.000001',
+            newFeeRate: '0.000002'
         },
-        animation: {
-            duration: 0 // Desativar animações para evitar problemas de renderização
+        {
+            timestamp: new Date(Date.now() - 7200000).toLocaleString(),
+            channel: '724725106597969922',
+            oldBaseFee: '1500',
+            newBaseFee: '1300',
+            oldFeeRate: '0.000003',
+            newFeeRate: '0.000002'
         }
-    };
+    ];
     
-    // Adicionar configurações específicas para gráficos de barras e linhas
-    if (type === 'bar' || type === 'line') {
-        options.scales = {
-            y: {
-                beginAtZero: true,
-                // Definir um limite máximo fixo para evitar o esticamento
-                max: type === 'line' ? 2000 : 10
-            }
-        };
+    if (updates.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhuma atualização de taxa recente</td></tr>';
+        return;
     }
     
-    // Criar o gráfico
-    charts[canvasId] = new Chart(canvas, {
-        type: type,
-        data: data,
-        options: options
+    // Limpar tabela
+    tableBody.innerHTML = '';
+    
+    // Adicionar linhas
+    updates.forEach(update => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${update.timestamp}</td>
+            <td>${shortenString(update.channel)}</td>
+            <td>${update.oldBaseFee} msat</td>
+            <td>${update.newBaseFee} msat</td>
+            <td>${formatFeeRate(update.oldFeeRate)}</td>
+            <td>${formatFeeRate(update.newFeeRate)}</td>
+        `;
+        
+        tableBody.appendChild(row);
     });
 }
 
@@ -348,13 +430,61 @@ function createFixedChart(canvasId, type, data) {
  * Formata um valor em satoshis para exibição
  */
 function formatSats(sats) {
-    return parseInt(sats).toLocaleString() + ' sats';
+    return `${parseInt(sats).toLocaleString()} sats`;
 }
 
 /**
- * Formata uma data/hora para exibição
+ * Formata uma taxa proporcional para exibição
  */
-function formatDateTime(dateTimeStr) {
-    const date = new Date(dateTimeStr);
-    return date.toLocaleString();
+function formatFeeRate(rate) {
+    const ppm = parseFloat(rate) * 1000000;
+    return `${rate} (${ppm} ppm)`;
+}
+
+/**
+ * Formata o nome da estratégia para exibição
+ */
+function formatStrategy(strategy) {
+    switch (strategy) {
+        case 'balanced':
+            return 'Balanceada';
+        case 'competitive':
+            return 'Competitiva';
+        case 'profitable':
+            return 'Lucrativa';
+        default:
+            return strategy;
+    }
+}
+
+/**
+ * Encurta uma string para exibição
+ */
+function shortenString(str, maxLength = 10) {
+    if (!str) return '';
+    if (str.length <= maxLength) return str;
+    return str.substring(0, maxLength) + '...';
+}
+
+/**
+ * Exibe um alerta na página
+ */
+function showAlert(message, type = 'info') {
+    // Criar elemento de alerta
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.setAttribute('role', 'alert');
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Adicionar ao topo da página
+    const main = document.querySelector('main');
+    main.insertBefore(alertDiv, main.firstChild);
+    
+    // Remover após 5 segundos
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
 }
