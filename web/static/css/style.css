@@ -56,23 +56,25 @@ body {
 }
 /* Estilos fixos para os containers de gráficos */
 .chart-container {
-    height: 300px !important; /* Força altura fixa */
-    width: 100% !important;
-    position: relative !important;
-    margin-bottom: 20px !important;
-    overflow: hidden !important;
-}
-
-canvas.chart {
-    height: 100% !important;
-    width: 100% !important;
+    height: 300px !important;
     max-height: 300px !important;
+    position: relative !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    margin-bottom: 20px !important;
 }
 
 /* Garantir que os gráficos não ultrapassem seus containers */
+canvas.chart {
+    max-height: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Estilos para os cards do dashboard */
 .dashboard-card {
     overflow: hidden !important;
     margin-bottom: 20px !important;
+    height: auto !important;
 }
 
 /* Estilo para o indicador de carregamento */
