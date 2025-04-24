@@ -32,7 +32,7 @@ O LND Fee Automation é uma aplicação para automatizar as taxas do seu node Li
 ### 1. Clone o repositório
 
 ```bash
-git clone https://github.com/seu-usuario/lightning-fee-automation.git
+git clone https://github.com/jvxis/lightning-fee-automation.git
 cd lightning-fee-automation
 ```
 
