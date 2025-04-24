@@ -77,19 +77,6 @@ canvas.chart {
     height: auto !important;
 }
 
-/* Estilo para o indicador de carregamento */
-#loading-indicator {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 9999;
-    background-color: rgba(255, 255, 255, 0.8);
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-}
-
 /* Estilos para tabelas */
 .table {
     color: #495057;

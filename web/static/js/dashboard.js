@@ -1,6 +1,6 @@
 /**
- * Dashboard JavaScript
- * Responsável pela funcionalidade da página de dashboard
+ * Dashboard JavaScript - Versão corrigida para problemas de esticamento vertical
+ * Esta versão mantém toda a funcionalidade original enquanto resolve o problema dos gráficos
  */
 
 // Variáveis globais
@@ -11,6 +11,9 @@ let charts = {};
 
 // Inicialização quando o documento estiver pronto
 document.addEventListener('DOMContentLoaded', function() {
+    // Aplicar estilos fixos aos containers de gráficos
+    applyFixedStyles();
+    
     // Inicializar componentes
     initAutomationToggle();
     initUpdateFeesButton();
@@ -26,26 +29,25 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(loadFeeManagerStatus, 30000); // A cada 30 segundos
 });
 
-// Adicione esta função ao seu arquivo dashboard.js existente
-function limitChartHeight() {
-    // Aplicar altura fixa via JavaScript
+/**
+ * Aplica estilos fixos aos containers de gráficos
+ * Esta função é crucial para evitar o esticamento vertical
+ */
+function applyFixedStyles() {
     document.querySelectorAll('.chart-container').forEach(container => {
-      container.style.height = '300px';
-      container.style.maxHeight = '300px';
-      container.style.overflow = 'hidden';
+        container.style.height = '300px';
+        container.style.maxHeight = '300px';
+        container.style.overflow = 'hidden';
+        container.style.position = 'relative';
     });
-  }
-  
-  // Chame esta função após carregar a página e após cada atualização
-  document.addEventListener('DOMContentLoaded', limitChartHeight);
-  
-
+}
 
 /**
  * Inicializa o toggle de automação
  */
 function initAutomationToggle() {
     const automationToggle = document.getElementById('automationToggle');
+    if (!automationToggle) return;
     
     automationToggle.addEventListener('change', function() {
         const isRunning = this.checked;
@@ -84,6 +86,7 @@ function initAutomationToggle() {
  */
 function initUpdateFeesButton() {
     const updateFeesBtn = document.getElementById('updateFeesBtn');
+    if (!updateFeesBtn) return;
     
     updateFeesBtn.addEventListener('click', function() {
         // Desabilitar botão durante a atualização
@@ -131,14 +134,20 @@ function loadNodeInfo() {
                 updateNodeInfoUI();
             } else {
                 console.error('Erro ao carregar informações do node:', data.error);
-                document.getElementById('nodeStatus').className = 'badge bg-danger';
-                document.getElementById('nodeStatus').textContent = 'Offline';
+                const nodeStatus = document.getElementById('nodeStatus');
+                if (nodeStatus) {
+                    nodeStatus.className = 'badge bg-danger';
+                    nodeStatus.textContent = 'Offline';
+                }
             }
         })
         .catch(error => {
             console.error('Erro:', error);
-            document.getElementById('nodeStatus').className = 'badge bg-danger';
-            document.getElementById('nodeStatus').textContent = 'Erro';
+            const nodeStatus = document.getElementById('nodeStatus');
+            if (nodeStatus) {
+                nodeStatus.className = 'badge bg-danger';
+                nodeStatus.textContent = 'Erro';
+            }
         });
 }
 
@@ -147,20 +156,29 @@ function loadNodeInfo() {
  */
 function updateNodeInfoUI() {
     // Atualizar status do node
-    document.getElementById('nodeStatus').className = 'badge bg-success';
-    document.getElementById('nodeStatus').textContent = 'Online';
+    const nodeStatus = document.getElementById('nodeStatus');
+    const nodeAlias = document.getElementById('nodeAlias');
+    const nodePubkey = document.getElementById('nodePubkey');
+    const activeChannels = document.getElementById('activeChannels');
+    const activeChannelsCount = document.getElementById('activeChannelsCount');
+    const pendingChannelsCount = document.getElementById('pendingChannelsCount');
+    
+    if (nodeStatus) {
+        nodeStatus.className = 'badge bg-success';
+        nodeStatus.textContent = 'Online';
+    }
     
     // Atualizar alias e pubkey
-    document.getElementById('nodeAlias').textContent = nodeInfo.alias || 'N/A';
-    document.getElementById('nodePubkey').textContent = nodeInfo.identity_pubkey || 'N/A';
+    if (nodeAlias) nodeAlias.textContent = nodeInfo.alias || 'N/A';
+    if (nodePubkey) nodePubkey.textContent = nodeInfo.identity_pubkey || 'N/A';
     
     // Atualizar contagem de canais
-    const activeChannelsCount = nodeInfo.num_active_channels || 0;
-    const pendingChannelsCount = nodeInfo.num_pending_channels || 0;
+    const activeCount = nodeInfo.num_active_channels || 0;
+    const pendingCount = nodeInfo.num_pending_channels || 0;
     
-    document.getElementById('activeChannels').textContent = activeChannelsCount;
-    document.getElementById('activeChannelsCount').textContent = activeChannelsCount;
-    document.getElementById('pendingChannelsCount').textContent = pendingChannelsCount;
+    if (activeChannels) activeChannels.textContent = activeCount;
+    if (activeChannelsCount) activeChannelsCount.textContent = activeCount;
+    if (pendingChannelsCount) pendingChannelsCount.textContent = pendingCount;
 }
 
 /**
@@ -175,6 +193,9 @@ function loadChannels() {
                 updateChannelsUI();
                 updateChannelsTable();
                 updateFeeCharts();
+                
+                // Reaplicar estilos fixos após atualizar os gráficos
+                applyFixedStyles();
             } else {
                 console.error('Erro ao carregar canais:', data.error);
             }
@@ -198,8 +219,11 @@ function updateChannelsUI() {
     });
     
     // Atualizar UI
-    document.getElementById('localBalance').textContent = formatSats(totalLocalBalance);
-    document.getElementById('remoteBalance').textContent = formatSats(totalRemoteBalance);
+    const localBalance = document.getElementById('localBalance');
+    const remoteBalance = document.getElementById('remoteBalance');
+    
+    if (localBalance) localBalance.textContent = formatSats(totalLocalBalance);
+    if (remoteBalance) remoteBalance.textContent = formatSats(totalRemoteBalance);
 }
 
 /**
@@ -207,6 +231,7 @@ function updateChannelsUI() {
  */
 function updateChannelsTable() {
     const tableBody = document.getElementById('channelsTableBody');
+    if (!tableBody) return;
     
     if (channels.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum canal encontrado</td></tr>';
@@ -304,44 +329,50 @@ function updateFeeCharts() {
 }
 
 /**
- * Cria ou atualiza um gráfico
+ * Cria ou atualiza um gráfico com configurações otimizadas para evitar esticamento
  */
 function createOrUpdateChart(canvasId, type, data) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
     
+    // Se já existe um gráfico para este canvas, destruí-lo
     if (charts[canvasId]) {
-        // Limpar dados antes de atualizar
-        charts[canvasId].data.labels = [];
-        charts[canvasId].data.datasets.forEach((dataset) => {
-            dataset.data = [];
-        });
-        
-        // Atualizar gráfico existente
-        charts[canvasId].data = data;
-        charts[canvasId].update();
-    } else {
-        // Criar novo gráfico
-        charts[canvasId] = new Chart(ctx, {
-            type: type,
-            data: data,
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        // Definir um limite máximo para evitar o esticamento
-                        suggestedMax: 5000 // Ajuste este valor conforme necessário
-                    }
-                },
-                animation: {
-                    duration: 500 // Reduzir a duração da animação para evitar problemas de renderização
-                }
-            }
-        });
+        charts[canvasId].destroy();
+        delete charts[canvasId];
     }
+    
+    // Configurações otimizadas para evitar esticamento vertical
+    const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+            }
+        },
+        animation: {
+            duration: 0 // Desativar animações completamente
+        }
+    };
+    
+    // Adicionar configurações específicas para gráficos de barras e linhas
+    if (type === 'bar' || type === 'line') {
+        options.scales = {
+            y: {
+                beginAtZero: true,
+                // Definir um limite máximo fixo (não sugerido) para evitar o esticamento
+                max: type === 'line' ? 2000 : 10
+            }
+        };
+    }
+    
+    // Criar o gráfico
+    charts[canvasId] = new Chart(canvas.getContext('2d'), {
+        type: type,
+        data: data,
+        options: options
+    });
 }
-
 
 /**
  * Carrega o status do gerenciador de taxas
@@ -367,10 +398,13 @@ function loadFeeManagerStatus() {
  */
 function updateFeeManagerStatusUI() {
     // Atualizar toggle de automação
-    document.getElementById('automationToggle').checked = feeManagerStatus.running;
+    const automationToggle = document.getElementById('automationToggle');
+    const feeStrategy = document.getElementById('feeStrategy');
+    
+    if (automationToggle) automationToggle.checked = feeManagerStatus.running;
     
     // Atualizar estratégia
-    document.getElementById('feeStrategy').textContent = formatStrategy(feeManagerStatus.strategy);
+    if (feeStrategy) feeStrategy.textContent = formatStrategy(feeManagerStatus.strategy);
     
     // Atualizar tabela de atualizações recentes (simulado para demonstração)
     updateRecentFeeUpdatesTable();
@@ -381,6 +415,7 @@ function updateFeeManagerStatusUI() {
  */
 function updateRecentFeeUpdatesTable() {
     const tableBody = document.getElementById('feeUpdatesTableBody');
+    if (!tableBody) return;
     
     // Dados simulados para demonstração
     const updates = [
@@ -481,10 +516,12 @@ function showAlert(message, type = 'info') {
     
     // Adicionar ao topo da página
     const main = document.querySelector('main');
-    main.insertBefore(alertDiv, main.firstChild);
-    
-    // Remover após 5 segundos
-    setTimeout(() => {
-        alertDiv.remove();
-    }, 5000);
+    if (main) {
+        main.insertBefore(alertDiv, main.firstChild);
+        
+        // Remover após 5 segundos
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
 }
